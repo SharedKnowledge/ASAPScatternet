@@ -1,9 +1,7 @@
 package net.sharksystem.asap.scatternet;
 
 import net.sharksystem.asap.*;
-import net.sharksystem.asap.apps.testsupport.SocketFactory;
-import net.sharksystem.asap.apps.testsupport.TestASAPConnectionHandler;
-import net.sharksystem.asap.apps.testsupport.TestHelper;
+import net.sharksystem.asap.apps.testsupport.*;
 import net.sharksystem.streams.StreamPair;
 import net.sharksystem.streams.StreamPairImpl;
 import org.junit.jupiter.api.Assertions;
@@ -12,11 +10,15 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collection;
+import java.util.HashSet;
 
-/**
- * Just to explain usage of this component / this API
- */
 public class UsageTests {
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                           test templates                                                    //
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final long WAIT_A_MOMENT = 100;
     /**
      * Encounter manager tests - can be used as template for scatter net tests
      * @throws IOException
@@ -67,8 +69,61 @@ public class UsageTests {
         // tell encounter manager
         aliceASAPEncounterManager.handleEncounter(alice2BobStreamPair, EncounterConnectionType.INTERNET);
         bobASAPEncounterManager.handleEncounter(bob2AliceStreamPair, EncounterConnectionType.INTERNET);
+
+        // wait a moment to finish asap encounter
+        Thread.sleep(WAIT_A_MOMENT);
     }
 
+    @Test
+    public void templateWithRealASAPPeer() throws IOException, InterruptedException, ASAPException {
+        // finally - a peer will handle an established connection - it will run an ASAP session
+        String appFormat = "scatternet/example";
+        Collection formats = new HashSet();
+        formats.add(appFormat);
+
+        ASAPConnectionHandler aliceASAPConnectionHandler = new ASAPTestPeerFS(TestConstants.ALICE_ID, formats);
+        ASAPEncounterManagerImpl aliceASAPEncounterManager = new ASAPEncounterManagerImpl(aliceASAPConnectionHandler);
+
+        // same on Bob side - we need more test with far more than two peers
+        ASAPConnectionHandler bobASAPConnectionHandler = new ASAPTestPeerFS(TestConstants.BOB_ID, formats);
+        ASAPEncounterManagerImpl bobASAPEncounterManager = new ASAPEncounterManagerImpl(bobASAPConnectionHandler);
+
+        /////////////////// connection establishment
+        // Bob connects with Alice
+        int alicePortNumber = TestHelper.getPortNumber();
+        ServerSocket aliceSrvSocket = new ServerSocket(alicePortNumber);
+        SocketFactory aliceSocketFactory = new SocketFactory(aliceSrvSocket);
+        new Thread(aliceSocketFactory).start();
+        Thread.sleep(42);
+
+        Socket bob2Alice = new Socket("localhost", alicePortNumber);
+        // connected
+        String b2aRemoteAddress = ASAPEncounterHelper.getRemoteAddress(bob2Alice);
+
+        // create stream pair - encounter manager only accept stream pairs
+        StreamPair bob2AliceStreamPair = StreamPairImpl.getStreamPairWithEndpointAddress(
+                bob2Alice.getInputStream(),
+                bob2Alice.getOutputStream(),
+                b2aRemoteAddress);
+
+
+        String a2bRemoteAddress = aliceSocketFactory.getRemoteAddress();
+        StreamPair alice2BobStreamPair = StreamPairImpl.getStreamPairWithEndpointAddress(
+                aliceSocketFactory.getInputStream(),
+                aliceSocketFactory.getOutputStream(),
+                a2bRemoteAddress);
+
+        // tell encounter manager
+        aliceASAPEncounterManager.handleEncounter(alice2BobStreamPair, EncounterConnectionType.INTERNET);
+        bobASAPEncounterManager.handleEncounter(bob2AliceStreamPair, EncounterConnectionType.INTERNET);
+
+        // wait a moment to finish asap encounter
+        Thread.sleep(WAIT_A_MOMENT);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                       asap scatter net tests start here                                     //
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private int portnumber;
     private SocketFactory socketFactory;
     private Socket socket;
@@ -118,6 +173,9 @@ public class UsageTests {
 
         bobAsapScatternetCreator.handleConnection(this.socket.getInputStream(), socket.getOutputStream());
 
+        // wait a moment - give other threads a chance to do something
+        Thread.sleep(WAIT_A_MOMENT);
+
         // something must be tested here - maybe with even with encounter manager.
 
         // peer Clara enters the scene
@@ -132,6 +190,8 @@ public class UsageTests {
         // connection established now - tell scatternet creators - this must do the magic
         aliceAsapScatternetCreator.handleConnection(socketFactory.getInputStream(), socketFactory.getOutputStream());
         claraAsapScatternetCreator.handleConnection(socket.getInputStream(), socket.getOutputStream());
+        // wait a moment - give other threads a chance to do something
+        Thread.sleep(WAIT_A_MOMENT);
 
         // something must be tested here - maybe with even with encounter manager.
 
@@ -140,6 +200,8 @@ public class UsageTests {
         // connection established now - tell scatternet creators - this must do the magic
         bobAsapScatternetCreator.handleConnection(socketFactory.getInputStream(), socketFactory.getOutputStream());
         claraAsapScatternetCreator.handleConnection(socket.getInputStream(), socket.getOutputStream());
+        // wait a moment - give other threads a chance to do something
+        Thread.sleep(WAIT_A_MOMENT);
 
         // something must be tested here - maybe with even with encounter manager.
 
@@ -155,6 +217,8 @@ public class UsageTests {
         // connection established now - tell scatternet creator - this must do the magic
         aliceAsapScatternetCreator.handleConnection(socketFactory.getInputStream(),  socketFactory.getOutputStream());
         davidAsapScatternetCreator.handleConnection(socket.getInputStream(),  socket.getOutputStream());
+        // wait a moment - give other threads a chance to do something
+        Thread.sleep(WAIT_A_MOMENT);
 
         // something must be tested here - maybe with even with encounter manager.
         // Alice should close a connection to Bob or Clara
