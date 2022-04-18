@@ -2,6 +2,7 @@ package net.sharksystem.asap.scatternet;
 
 import net.sharksystem.asap.ASAPEncounterManager;
 import net.sharksystem.asap.ASAPException;
+import net.sharksystem.asap.ASAPPeer;
 import net.sharksystem.asap.EncounterConnectionType;
 import net.sharksystem.asap.protocol.ASAPConnection;
 
@@ -10,13 +11,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 
-class ASAPScatternetImpl implements ASAPScatternetCreator {
+class ASAPScatternetCreatorImpl implements ASAPScatternetCreator {
     private final int maxConnectionsNumber;
     private final ASAPEncounterManager asapEncounterManager;
+    private final ASAPPeer peer;
 
-    public ASAPScatternetImpl(int maxConnectionsNumber, ASAPEncounterManager asapEncounterManager) {
+    public ASAPScatternetCreatorImpl(int maxConnectionsNumber, ASAPEncounterManager asapEncounterManager, ASAPPeer peer) {
         this.maxConnectionsNumber = maxConnectionsNumber;
         this.asapEncounterManager = asapEncounterManager;
+        this.peer = peer;
+    }
+
+    ASAPScatternetCreatorImpl(int maxConnectionsNumber, ASAPEncounterManager asapEncounterManager) {
+        this(maxConnectionsNumber, asapEncounterManager, null); // for tests only
     }
 
     @Override

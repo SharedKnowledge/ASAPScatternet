@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -137,7 +138,7 @@ public class UsageTests {
     }
 
     @Test
-    public void usage1() throws IOException, InterruptedException, ASAPException {
+    public void createScatternet1() throws IOException, InterruptedException, ASAPException {
 
         /* Assumptions:
         - Each peer can handle up to three (minimal number) connections to other peers.
@@ -155,14 +156,14 @@ public class UsageTests {
                 new TestASAPConnectionHandler(); // would be a peer in a real environment
         ASAPEncounterManagerImpl aliceASAPEncounterManager = new ASAPEncounterManagerImpl(aliceASAPConnectionHandler);
         ASAPScatternetCreator aliceAsapScatternetCreator =
-                new ASAPScatternetImpl(maxOpenConnections, aliceASAPEncounterManager);
+                new ASAPScatternetCreatorImpl(maxOpenConnections, aliceASAPEncounterManager);
 
         // Bob
         ASAPConnectionHandler bobASAPConnectionHandler =
                 new TestASAPConnectionHandler(); // would be a peer in a real environment
         ASAPEncounterManagerImpl bobASAPEncounterManager = new ASAPEncounterManagerImpl(bobASAPConnectionHandler);
         ASAPScatternetCreator bobAsapScatternetCreator =
-                new ASAPScatternetImpl(maxOpenConnections, bobASAPEncounterManager);
+                new ASAPScatternetCreatorImpl(maxOpenConnections, bobASAPEncounterManager);
 
         /////////////////// Alice and Bob connect
         this.createNewSocketAndFactory();
@@ -183,7 +184,7 @@ public class UsageTests {
                 new TestASAPConnectionHandler(); // would be a peer in a real environment
         ASAPEncounterManagerImpl claraASAPEncounterManager = new ASAPEncounterManagerImpl(claraASAPConnectionHandler);
         ASAPScatternetCreator claraAsapScatternetCreator =
-                new ASAPScatternetImpl(maxOpenConnections, claraASAPEncounterManager);
+                new ASAPScatternetCreatorImpl(maxOpenConnections, claraASAPEncounterManager);
 
         /////////////////// Alice and Clara connect
         this.createNewSocketAndFactory();
@@ -210,7 +211,7 @@ public class UsageTests {
                 new TestASAPConnectionHandler(); // would be a peer in a real environment
         ASAPEncounterManagerImpl davidASAPEncounterManager = new ASAPEncounterManagerImpl(davidASAPConnectionHandler);
         ASAPScatternetCreator davidAsapScatternetCreator =
-                new ASAPScatternetImpl(maxOpenConnections, davidASAPEncounterManager);
+                new ASAPScatternetCreatorImpl(maxOpenConnections, davidASAPEncounterManager);
 
         /////////////////// Alice and David connect
         this.createNewSocketAndFactory();
@@ -225,8 +226,30 @@ public class UsageTests {
         Assertions.fail("nothing tested yet");
     }
 
+    public static final String WORKING_SUB_DIRECTORY = TestConstants.ROOT_DIRECTORY + "scatternet/";
+    public static final String ALICE_DIRECTORY = WORKING_SUB_DIRECTORY + "/" + TestConstants.ALICE_NAME;
+    public static final String APPNAME = "asap/scatternetTest";
+    public static final int DEFAULT_MAX_OPEN_CONNECTIONS = 2;
+
     @Test
-    public void testASAPProtocol() {
-        Assertions.fail("TODO: are ASAP packages routed within that scatter net?");
+    public void useScatternet1() throws IOException, ASAPException {
+        // create full stack: peer, encounter manager, scatternet manager
+        TestHelper.removeFolder(WORKING_SUB_DIRECTORY);
+        Collection<CharSequence> formats = new ArrayList<>();
+        formats.add(APPNAME);
+
+        // Alice
+        ASAPTestPeerFS alicePeer = new ASAPTestPeerFS(TestConstants.ALICE_ID, ALICE_DIRECTORY, formats);
+        ASAPEncounterManagerImpl aliceASAPEncounterManager = new ASAPEncounterManagerImpl(alicePeer);
+        ASAPScatternetCreator aliceAsapScatternetCreator =
+                new ASAPScatternetCreatorImpl(DEFAULT_MAX_OPEN_CONNECTIONS, aliceASAPEncounterManager);
+
+        // Bob etc. with same pattern
+
+        // send a message - originator e.g. Alice
+        alicePeer.sendASAPMessage(APPNAME, TestConstants.URI, TestConstants.MESSAGE_1);
+
+        // TODO - test if arrived
+        Assertions.fail("TODO: ASAP package arrived?");
     }
 }
