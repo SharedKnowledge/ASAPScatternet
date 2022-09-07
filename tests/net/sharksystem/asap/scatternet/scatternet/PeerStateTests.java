@@ -102,8 +102,12 @@ public class PeerStateTests {
         Assertions.assertFalse(peer_A_is_finder ?
                 peer_A.getKnownPeers().contains(peer_A_partners_id) :
                 peer_B.getKnownPeers().contains(peer_B_partners_id));
-        Assertions.assertTrue(peer_A_is_finder ? peer_A.switchToConsidering(peer_A_partners_id) :
-                peer_B.switchToConsidering(peer_B_partners_id));
+        // In this small test we can presume that the time for the "consideration" will be small since there are
+        // not so many known peers, so the Assertion can be made immediately after the switch.
+        // But in a bigger network a peer would need more time to consider connecting to another peer
+        // since it would have to iterate over all its known peers.
+        Assertions.assertTrue(peer_A_is_finder ? peer_A.switchToConsidering(peer_A_partners_id, peer_A.getKnownPeers()) :
+                peer_B.switchToConsidering(peer_B_partners_id, peer_B.getKnownPeers()));
         Assertions.assertTrue(peer_A_is_finder ? peer_A.isInState(PeerStates.CONSIDERING) :
                 peer_B.isInState(PeerStates.CONSIDERING));
     }

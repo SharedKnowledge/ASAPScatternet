@@ -1,7 +1,7 @@
 package net.sharksystem.asap.scatternet.scatternet.utils;
 
 /**
- *
+ * Constants to be used in tests depending on the configuration of the scatternet
  */
 public interface TestConstants {
     /**
